@@ -1,4 +1,6 @@
-function MyForm() {
+import React from "react"
+
+export function RecipeForm() {
   const [inputs, setInputs] = React.useState({})
 
   const handleChange = async (event) => {
@@ -6,18 +8,17 @@ function MyForm() {
     const value = event.target.value
     const type = event.target.type
     let recipe = {}
-    if (name == "recipe_name" && value !== inputs.recipe_name) {
+    if (name === "recipe_name" && value !== inputs.recipe_name) {
       // recipe name has changed
       try {
         recipe = await (
           await fetch(`http://localhost:80/zach/recipe/${value}`)
         ).json()
-        console.log(recipe)
       } catch {
         recipe = {}
       }
     }
-    await setInputs((values) => ({
+    setInputs((values) => ({
       ...recipe,
       ...values,
       [name]: type === "number" ? parseInt(value, 10) : value,
@@ -41,7 +42,7 @@ function MyForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="form-style-5">
+    <form onSubmit={handleSubmit} className="form-style-5" key="form">
       <label>
         Enter your name:
         <input
@@ -73,6 +74,3 @@ function MyForm() {
     </form>
   )
 }
-const app = document.getElementById("app")
-
-ReactDOM.render(<MyForm />, app)

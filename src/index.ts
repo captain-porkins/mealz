@@ -19,7 +19,7 @@ async function run() {
   const mongo = await client()
 
   process.on("SIGINT", () => {
-    console.log("Shitting down...")
+    console.log("Shutting down...")
     mongo.close()
     process.exit()
   })
@@ -159,12 +159,12 @@ async function run() {
   )
 
   app.get("/", async (req: express.Request, res: express.Response) => {
-    const content = await fs.readFile(path.join(__dirname, "./ui/index.html"))
+    const content = await fs.readFile(path.join(__dirname, "client/index.html"))
     res.set("Content-Type", "text/html")
     res.send(content)
   })
 
-  app.use(express.static(path.join(__dirname, "ui")))
+  app.use(express.static(path.join(__dirname, "client")))
 
   app.listen(80)
   console.log("Listening on port 80...")
