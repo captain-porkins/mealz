@@ -3,6 +3,8 @@ import _ from "lodash"
 export type Recipe = {
   _id: string
   servings: number
+  lunch?: boolean
+  dinner?: boolean
 }
 
 export type Valid = {
@@ -32,6 +34,16 @@ const checkValidity = (r: unknown): Valid | Invalid => {
     return {
       isValid: false,
       reason: "servings not defined or not a number",
+    }
+  } else if (r.lunch && !(typeof r.lunch === "boolean")) {
+    return {
+      isValid: false,
+      reason: "lunch is defined but is not a boolean",
+    }
+  } else if (r.dinner && !(typeof r.dinner === "boolean")) {
+    return {
+      isValid: false,
+      reason: "dinner is defined but is not a boolean",
     }
   } else {
     return { isValid: true }

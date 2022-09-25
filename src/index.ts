@@ -76,7 +76,7 @@ async function run() {
         (await mongo.select(
           "recipes",
           user,
-          Object.fromEntries(tags.map((t) => [t, { $exists: true }]))
+          Object.fromEntries(tags.map((t) => [t, { $eq: true }]))
         )) as Recipe[]
       )
 

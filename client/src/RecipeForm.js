@@ -7,6 +7,7 @@ export function RecipeForm() {
     const name = event.target.name
     const value = event.target.value
     const type = event.target.type
+    console.log(inputs.meal)
     let recipe = {}
     if (name === "recipe_name" && value !== inputs.recipe_name) {
       // recipe name has changed
@@ -30,7 +31,7 @@ export function RecipeForm() {
     const body = { ...inputs }
     delete body.username
     delete body.recipe_name
-    await fetch(`${inputs.username}/recipe/${inputs.recipe_name}`, {
+    await fetch(`zach/recipe/${inputs.recipe_name}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -44,13 +45,11 @@ export function RecipeForm() {
   return (
     <form onSubmit={handleSubmit} className="form-style-5" key="form">
       <label>
-        Enter your name:
-        <input
-          type="text"
-          name="username"
-          value={inputs.username || ""}
-          onChange={handleChange}
-        />
+        Meal
+        <select name="meal" value={inputs.meal || ""} onChange={handleChange}>
+          <option value="lunch">Lunch</option>
+          <option value="dinner">Dinner</option>
+        </select>
       </label>
       <label>
         Enter your recipe name:

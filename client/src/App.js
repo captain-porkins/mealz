@@ -16,9 +16,7 @@ class App extends Component {
           </TabList>
 
           <TabPanel>
-            <h2>
-              <RecipeForm />
-            </h2>
+            <RecipeForm />
           </TabPanel>
           <TabPanel>
             <MealPlan />
