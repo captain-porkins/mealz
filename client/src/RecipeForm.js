@@ -1,9 +1,11 @@
 import React from "react"
+import CreatableSelect from "react-select/creatable"
 
 export function RecipeForm() {
   const [inputs, setInputs] = React.useState({})
 
   const handleChange = async (event) => {
+    console.log(event)
     const name = event.target.name
     const value = event.target.value
     const type = event.target.type
@@ -12,9 +14,7 @@ export function RecipeForm() {
     if (name === "recipe_name" && value !== inputs.recipe_name) {
       // recipe name has changed
       try {
-        recipe = await (
-          await fetch(`http://localhost:80/zach/recipe/${value}`)
-        ).json()
+        recipe = await (await fetch(`zach/recipe/${value}`)).json()
       } catch {
         recipe = {}
       }
@@ -42,6 +42,44 @@ export function RecipeForm() {
     alert("recipe sent!")
   }
 
+  const handleIngredientsChange = async (inputValue) => {
+    setInputs((values) => ({
+      ...values,
+      ingredients: inputValue,
+    }))
+  }
+
+  const handleCurrentIngredientChange = async (inputValue) => {
+    setInputs((values) => ({
+      ...values,
+      currentIngredient: inputValue,
+    }))
+  }
+
+  const handleKeyDown = (event) => {
+    if (!inputs.currentIngredient) {
+      return
+    }
+    switch (event.key) {
+      case "Enter":
+      case "Tab":
+        setInputs((values) => ({
+          ...values,
+          currentIngredient: "",
+          ingredients: [
+            ...(values.ingredients ?? []),
+            {
+              label: values.currentIngredient,
+              value: values.currentIngredient,
+            },
+          ],
+        }))
+        event.preventDefault()
+        break
+      default:
+    }
+  }
+
   return (
     <form onSubmit={handleSubmit} className="form-style-5" key="form">
       <label>
@@ -67,6 +105,23 @@ export function RecipeForm() {
           name="servings"
           value={inputs.servings || ""}
           onChange={handleChange}
+        />
+      </label>
+      <label>
+        Ingredients:
+        <CreatableSelect
+          components={{
+            DropdownIndicator: null,
+          }}
+          inputValue={inputs.currentIngredient}
+          isClearable
+          isMulti
+          menuIsOpen={false}
+          onChange={handleIngredientsChange}
+          onInputChange={handleCurrentIngredientChange}
+          onKeyDown={handleKeyDown}
+          placeholder="Type something and press enter..."
+          value={inputs.ingredients}
         />
       </label>
       <input type="submit" />
