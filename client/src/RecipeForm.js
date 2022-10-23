@@ -1,15 +1,34 @@
+import _ from "lodash"
 import React from "react"
 import CreatableSelect from "react-select/creatable"
 
+function splitIngredient({ value }) {
+  const unitsFormat = /(?<name>.*) (?<quantity>[0-9]+)(?<unit>\w*)?/i
+  const match = value.match(unitsFormat)
+  let ret
+  if (match) {
+    ret = {
+      name: match.groups.name.toLowerCase(),
+      quantity: {
+        value: parseInt(match.groups.quantity.toLowerCase(), 10),
+        ...(match.groups.unit ? { unit: match.groups.unit.toLowerCase() } : {}),
+      },
+    }
+  } else {
+    ret = {
+      name: value,
+    }
+  }
+  return ret
+}
+
 export function RecipeForm() {
-  const [inputs, setInputs] = React.useState({})
+  const [inputs, setInputs] = React.useState({ meal: "lunch" })
 
   const handleChange = async (event) => {
-    console.log(event)
     const name = event.target.name
     const value = event.target.value
     const type = event.target.type
-    console.log(inputs.meal)
     let recipe = {}
     if (name === "recipe_name" && value !== inputs.recipe_name) {
       // recipe name has changed
@@ -19,18 +38,24 @@ export function RecipeForm() {
         recipe = {}
       }
     }
+    console.log(name, value)
     setInputs((values) => ({
       ...recipe,
       ...values,
       [name]: type === "number" ? parseInt(value, 10) : value,
     }))
+    console.log(inputs.meal)
   }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
-    const body = { ...inputs }
-    delete body.username
-    delete body.recipe_name
+    console.log(inputs.meal)
+    const body = {
+      ..._.pick(inputs, "servings", "ingredients", "method"),
+      ingredients: inputs.ingredients.map((i) => splitIngredient(i)),
+      ...(inputs.meal === "lunch" ? { lunch: true } : { dinner: true }),
+    }
+
     await fetch(`zach/recipe/${inputs.recipe_name}`, {
       method: "POST",
       headers: {
@@ -49,7 +74,7 @@ export function RecipeForm() {
     }))
   }
 
-  const handleCurrentIngredientChange = async (inputValue) => {
+  const handleCurrentIngredientChange = (inputValue) => {
     setInputs((values) => ({
       ...values,
       currentIngredient: inputValue,
@@ -81,50 +106,75 @@ export function RecipeForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="form-style-5" key="form">
-      <label>
-        Meal
-        <select name="meal" value={inputs.meal || ""} onChange={handleChange}>
-          <option value="lunch">Lunch</option>
-          <option value="dinner">Dinner</option>
-        </select>
-      </label>
-      <label>
-        Enter your recipe name:
-        <input
-          type="text"
-          name="recipe_name"
-          value={inputs.recipe_name || ""}
-          onChange={handleChange}
-        />
-      </label>
-      <label>
-        Enter number of servings:
-        <input
-          type="number"
-          name="servings"
-          value={inputs.servings || ""}
-          onChange={handleChange}
-        />
-      </label>
-      <label>
-        Ingredients:
-        <CreatableSelect
-          components={{
-            DropdownIndicator: null,
-          }}
-          inputValue={inputs.currentIngredient}
-          isClearable
-          isMulti
-          menuIsOpen={false}
-          onChange={handleIngredientsChange}
-          onInputChange={handleCurrentIngredientChange}
-          onKeyDown={handleKeyDown}
-          placeholder="Type something and press enter..."
-          value={inputs.ingredients}
-        />
-      </label>
-      <input type="submit" />
-    </form>
+    <div
+      style={{
+        display: "flex",
+        width: "100%",
+        height: "100%",
+        justifyContent: "center",
+        justifyItems: "center",
+        margin: 0,
+      }}
+    >
+      <form
+        onSubmit={handleSubmit}
+        className="form-style-5 recipeForm"
+        key="form"
+      >
+        <label>
+          Meal
+          <select name="meal" value={inputs.meal || ""} onChange={handleChange}>
+            <option value="lunch">Lunch</option>
+            <option value="dinner">Dinner</option>
+          </select>
+        </label>
+        <label>
+          Enter your recipe name:
+          <input
+            type="text"
+            name="recipe_name"
+            value={inputs.recipe_name || ""}
+            onChange={handleChange}
+          />
+        </label>
+        <label>
+          Enter number of servings:
+          <input
+            type="number"
+            name="servings"
+            value={inputs.servings || ""}
+            onChange={handleChange}
+          />
+        </label>
+        <label>
+          Ingredients:
+          <CreatableSelect
+            components={{
+              DropdownIndicator: null,
+            }}
+            inputValue={inputs.currentIngredient}
+            isClearable
+            isMulti
+            menuIsOpen={false}
+            onChange={handleIngredientsChange}
+            onInputChange={handleCurrentIngredientChange}
+            onKeyDown={handleKeyDown}
+            placeholder="Type something and press enter..."
+            value={inputs.ingredients}
+          />
+        </label>
+        <label className="recipeMethod">
+          Method
+          <textarea
+            type="text"
+            name="method"
+            value={inputs.method || ""}
+            onChange={handleChange}
+            style={{ width: "100%", height: "95%" }}
+          />
+        </label>
+        <input type="submit" style={{ gridArea: "c" }} />
+      </form>
+    </div>
   )
 }

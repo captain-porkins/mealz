@@ -13,6 +13,86 @@ export class MealPlan extends Component {
       mealPlan: null,
     }
   }
+
+  render() {
+    let mealz = null
+
+    if (this.state.mealPlan) {
+      mealz = this.formatMealz(mealz)
+    }
+    return (
+      <div
+        style={{
+          display: "flex",
+          width: "100%",
+          height: "100%",
+          justifyContent: "center",
+          justifyItems: "center",
+          margin: 0,
+        }}
+      >
+        <div className="mealPlan">
+          <h1 style={{ gridArea: "plh", justifySelf: "center" }}>Plan</h1>
+          <form className="form-style-5 mealPlanForm">
+            <label>
+              Days
+              <input
+                type="number"
+                name="days"
+                value={this.state.plan.days}
+                onChange={(event) => {
+                  this.setState({
+                    ...this.state,
+                    plan: { ...this.state.plan, days: event.target.value },
+                  })
+                }}
+              />
+            </label>
+            <label>
+              Mouths
+              <input
+                type="number"
+                name="mouths"
+                value={this.state.plan.mouths}
+                onChange={(event) => {
+                  this.setState({
+                    ...this.state,
+                    plan: { ...this.state.plan, mouths: event.target.value },
+                  })
+                }}
+              />
+            </label>
+            <label>
+              Meal
+              <select
+                name="meal"
+                value={this.state.plan.meal}
+                onChange={(event) => {
+                  this.setState({
+                    ...this.meal,
+                    plan: { ...this.state.plan, meal: event.target.value },
+                  })
+                }}
+              >
+                <option value="lunch">Lunch</option>
+                <option value="dinner">Dinner</option>
+              </select>
+            </label>
+          </form>
+          <h1 style={{ gridArea: "mlh", justifySelf: "center" }}>Mealz</h1>
+          <button
+            onClick={this.handleClick.bind(this)}
+            className="mealzButton"
+            key="button"
+          >
+            Generate Mealz
+          </button>
+          {mealz}
+        </div>
+      </div>
+    )
+  }
+
   async handleClick() {
     const mealPlan = await (
       await fetch(
@@ -27,77 +107,9 @@ export class MealPlan extends Component {
       mealPlan,
     })
   }
-  render() {
-    let mealz = null
-
-    if (this.state.mealPlan) {
-      mealz = this.formatMealz(mealz)
-    }
-    return (
-      <div className="mealPlan">
-        <h1 style={{ gridArea: "plh", justifySelf: "center" }}>Plan</h1>
-        <form className="form-style-5 mealPlanForm">
-          <label>
-            Days
-            <input
-              type="number"
-              name="days"
-              value={this.state.plan.days}
-              onChange={(event) => {
-                this.setState({
-                  ...this.state,
-                  plan: { ...this.state.plan, days: event.target.value },
-                })
-              }}
-            />
-          </label>
-          <label>
-            Mouths
-            <input
-              type="number"
-              name="mouths"
-              value={this.state.plan.mouths}
-              onChange={(event) => {
-                this.setState({
-                  ...this.state,
-                  plan: { ...this.state.plan, mouths: event.target.value },
-                })
-              }}
-            />
-          </label>
-          <label>
-            Meal
-            <select
-              name="meal"
-              value={this.state.plan.meal}
-              onChange={(event) => {
-                this.setState({
-                  ...this.meal,
-                  plan: { ...this.state.plan, meal: event.target.value },
-                })
-              }}
-            >
-              <option value="lunch">Lunch</option>
-              <option value="dinner">Dinner</option>
-            </select>
-          </label>
-        </form>
-        <h1 style={{ gridArea: "mlh", justifySelf: "center" }}>Mealz</h1>
-        <button
-          onClick={this.handleClick.bind(this)}
-          className="mealzButton"
-          key="button"
-        >
-          Generate Mealz
-        </button>
-        {mealz}
-      </div>
-    )
-  }
 
   formatMealz() {
     const formattedMealz = this.state.mealPlan.mealz.map((meal) => {
-      console.log(meal)
       return (
         <Collapsible trigger={meal.recipe._id} key={meal.recipe._id}>
           <p>Days: {meal.days}</p>
