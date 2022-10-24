@@ -51,9 +51,8 @@ export function RecipeForm() {
     event.preventDefault()
     console.log(inputs.meal)
     const body = {
-      ..._.pick(inputs, "servings", "ingredients", "method"),
+      ..._.pick(inputs, "servings", "ingredients", "method", "meal"),
       ingredients: inputs.ingredients.map((i) => splitIngredient(i)),
-      ...(inputs.meal === "lunch" ? { lunch: true } : { dinner: true }),
     }
 
     await fetch(`zach/recipe/${inputs.recipe_name}`, {

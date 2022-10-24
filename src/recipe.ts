@@ -11,8 +11,7 @@ type Ingredient = {
 export type Recipe = {
   _id: string
   servings: number
-  lunch?: boolean
-  dinner?: boolean
+  meal: string
   ingredients?: Ingredient[]
   method?: string
 }
@@ -59,15 +58,10 @@ const checkValidity = (r: unknown): Valid | Invalid => {
       isValid: false,
       reason: "servings not defined or not a number",
     }
-  } else if (r.lunch && !(typeof r.lunch === "boolean")) {
+  } else if (!_.isString(r.meal)) {
     return {
       isValid: false,
-      reason: "lunch is defined but is not a boolean",
-    }
-  } else if (r.dinner && !(typeof r.dinner === "boolean")) {
-    return {
-      isValid: false,
-      reason: "dinner is defined but is not a boolean",
+      reason: "meal is not defined or is not a string",
     }
   } else if (
     r.ingredients &&
