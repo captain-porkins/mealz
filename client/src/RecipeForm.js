@@ -49,10 +49,11 @@ export function RecipeForm() {
 
   const handleSubmit = async (event) => {
     event.preventDefault()
-    console.log(inputs.meal)
+    console.log(inputs.tags)
     const body = {
-      ..._.pick(inputs, "servings", "ingredients", "method", "meal"),
+      ..._.pick(inputs, "servings", "ingredients", "method"),
       ingredients: inputs.ingredients.map((i) => splitIngredient(i)),
+      tags: inputs.tags.map((t) => t.value),
     }
 
     await fetch(`zach/recipe/${inputs.recipe_name}`, {
@@ -80,7 +81,7 @@ export function RecipeForm() {
     }))
   }
 
-  const handleKeyDown = (event) => {
+  const handleKeyDownIngredient = (event) => {
     if (!inputs.currentIngredient) {
       return
     }
@@ -95,6 +96,30 @@ export function RecipeForm() {
             {
               label: values.currentIngredient,
               value: values.currentIngredient,
+            },
+          ],
+        }))
+        event.preventDefault()
+        break
+      default:
+    }
+  }
+
+  const handleKeyDownTags = (event) => {
+    if (!inputs.currentTag) {
+      return
+    }
+    switch (event.key) {
+      case "Enter":
+      case "Tab":
+        setInputs((values) => ({
+          ...values,
+          currentTag: "",
+          tags: [
+            ...(values.tags ?? []),
+            {
+              label: values.currentTag,
+              value: values.currentTag,
             },
           ],
         }))
@@ -120,13 +145,6 @@ export function RecipeForm() {
         className="form-style-5 recipeForm"
         key="form"
       >
-        <label>
-          Meal
-          <select name="meal" value={inputs.meal || ""} onChange={handleChange}>
-            <option value="lunch">Lunch</option>
-            <option value="dinner">Dinner</option>
-          </select>
-        </label>
         <label>
           Enter your recipe name:
           <input
@@ -157,9 +175,36 @@ export function RecipeForm() {
             menuIsOpen={false}
             onChange={handleIngredientsChange}
             onInputChange={handleCurrentIngredientChange}
-            onKeyDown={handleKeyDown}
+            onKeyDown={handleKeyDownIngredient}
             placeholder="Type something and press enter..."
             value={inputs.ingredients}
+          />
+        </label>
+        <label>
+          Tags:
+          <CreatableSelect
+            components={{
+              DropdownIndicator: null,
+            }}
+            inputValue={inputs.currentTag}
+            isClearable
+            isMulti
+            menuIsOpen={false}
+            onChange={(input) =>
+              setInputs((values) => ({
+                ...values,
+                tags: input,
+              }))
+            }
+            onInputChange={(input) =>
+              setInputs((values) => ({
+                ...values,
+                currentTag: input,
+              }))
+            }
+            onKeyDown={handleKeyDownTags}
+            placeholder="Type something and press enter..."
+            value={inputs.tags}
           />
         </label>
         <label className="recipeMethod">

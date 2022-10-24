@@ -9,7 +9,6 @@ import { fileURLToPath } from "url"
 import { dirname } from "path"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const credentials = path.join(__dirname, "cert.pem")
 
 async function run() {
   const app = express()
@@ -71,13 +70,9 @@ async function run() {
           .send('Must specify "mouths" as a number in request params')
         return
       }
-
+      const query = tags.length ? { $all: tags } : {}
       const recipes: Recipe[] = _.shuffle(
-        (await mongo.select(
-          "recipes",
-          user,
-          Object.fromEntries(tags.map((t) => [t, { $eq: true }]))
-        )) as Recipe[]
+        (await mongo.select("recipes", user, query)) as Recipe[]
       )
 
       const servingsRequired = mouths * days

@@ -11,9 +11,9 @@ type Ingredient = {
 export type Recipe = {
   _id: string
   servings: number
-  meal: string
   ingredients?: Ingredient[]
   method?: string
+  tags?: string[]
 }
 
 export type Valid = {
@@ -42,6 +42,10 @@ const isValidIngredient = (v: unknown): v is Ingredient => {
   }
 }
 
+const isValidTags = (tags: unknown): tags is Record<string, boolean> => {
+  return _.isArray(tags) && tags.every(_.isString)
+}
+
 const checkValidity = (r: unknown): Valid | Invalid => {
   if (!isRecord(r)) {
     return {
@@ -57,11 +61,6 @@ const checkValidity = (r: unknown): Valid | Invalid => {
     return {
       isValid: false,
       reason: "servings not defined or not a number",
-    }
-  } else if (!_.isString(r.meal)) {
-    return {
-      isValid: false,
-      reason: "meal is not defined or is not a string",
     }
   } else if (
     r.ingredients &&
@@ -79,6 +78,11 @@ const checkValidity = (r: unknown): Valid | Invalid => {
     return {
       isValid: false,
       reason: "method is defined but is not a string",
+    }
+  } else if (r.tags && !isValidTags(r.tags)) {
+    return {
+      isValid: false,
+      reason: "tags defined but is not a list of strings",
     }
   } else {
     return { isValid: true }
