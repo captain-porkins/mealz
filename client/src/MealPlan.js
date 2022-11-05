@@ -94,7 +94,7 @@ export class MealPlan extends Component {
           mouths: this.state.plan.mouths,
           days: this.state.plan.days,
           meal: this.state.plan.meal,
-          tags: this.state.tags,
+          ...(this.state.tags.length ? { tags: this.state.tags } : {}),
         })}`
       )
     ).json()
