@@ -1,6 +1,6 @@
 import React, { Component } from "react"
 import Collapsible from "react-collapsible"
-
+import { ListInput } from "./ListInput"
 export class MealPlan extends Component {
   constructor(props) {
     super(props)
@@ -11,6 +11,7 @@ export class MealPlan extends Component {
         meal: "lunch",
       },
       mealPlan: null,
+      tags: [],
     }
   }
 
@@ -62,6 +63,15 @@ export class MealPlan extends Component {
                 }}
               />
             </label>
+            <label>
+              Tags:
+              <ListInput
+                onChange={(tags) =>
+                  this.setState((oldState) => ({ ...oldState, tags }))
+                }
+                value={this.state.tags}
+              />
+            </label>
           </form>
           <h1 style={{ gridArea: "mlh", justifySelf: "center" }}>Mealz</h1>
           <button
@@ -84,6 +94,7 @@ export class MealPlan extends Component {
           mouths: this.state.plan.mouths,
           days: this.state.plan.days,
           meal: this.state.plan.meal,
+          tags: this.state.tags,
         })}`
       )
     ).json()

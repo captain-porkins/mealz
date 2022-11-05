@@ -43,10 +43,10 @@ async function run() {
         typeof req.query.leftOversPermitted === "string" &&
         req.query.leftOversPermitted.toLowerCase() == "true"
 
-      const tags = _.isString(req.query.tag)
-        ? [req.query.tag]
-        : _.isArray(req.query.tag) && _.isString(req.query[0])
-        ? (req.query.tag as string[])
+      const tags = _.isString(req.query.tags)
+        ? [req.query.tags]
+        : _.isArray(req.query.tags) && _.isString(req.query[0])
+        ? (req.query.tags as string[])
         : []
 
       if (!user) {
@@ -70,7 +70,7 @@ async function run() {
           .send('Must specify "mouths" as a number in request params')
         return
       }
-      const query = tags.length ? { $all: tags } : {}
+      const query = tags.length ? { tags: { $all: tags } } : {}
       const recipes: Recipe[] = _.shuffle(
         (await mongo.select("recipes", user, query)) as Recipe[]
       )

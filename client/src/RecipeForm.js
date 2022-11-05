@@ -1,10 +1,10 @@
 import _ from "lodash"
 import React from "react"
-import CreatableSelect from "react-select/creatable"
+import { ListInput } from "./ListInput"
 
-function splitIngredient({ value }) {
+function splitIngredient(ingredient) {
   const unitsFormat = /(?<name>.*) (?<quantity>[0-9]+)(?<unit>\w*)?/i
-  const match = value.match(unitsFormat)
+  const match = ingredient.match(unitsFormat)
   let ret
   if (match) {
     ret = {
@@ -16,10 +16,19 @@ function splitIngredient({ value }) {
     }
   } else {
     ret = {
-      name: value,
+      name: ingredient,
     }
   }
   return ret
+}
+
+function stringifyIngredient(ingredient) {
+  if (ingredient.quantity) {
+    return `${ingredient.name} ${ingredient.quantity.value}${
+      ingredient.quantity.unit ?? ""
+    }`
+  }
+  return ingredient.name
 }
 
 export function RecipeForm() {
@@ -34,6 +43,7 @@ export function RecipeForm() {
       // recipe name has changed
       try {
         recipe = await (await fetch(`zach/recipe/${value}`)).json()
+        recipe.ingredients = recipe.ingredients.map(stringifyIngredient)
       } catch {
         recipe = {}
       }
@@ -44,16 +54,14 @@ export function RecipeForm() {
       ...values,
       [name]: type === "number" ? parseInt(value, 10) : value,
     }))
-    console.log(inputs.meal)
   }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
     console.log(inputs.tags)
     const body = {
-      ..._.pick(inputs, "servings", "ingredients", "method"),
+      ..._.pick(inputs, "servings", "tags", "method"),
       ingredients: inputs.ingredients.map((i) => splitIngredient(i)),
-      tags: inputs.tags.map((t) => t.value),
     }
 
     await fetch(`zach/recipe/${inputs.recipe_name}`, {
@@ -64,69 +72,7 @@ export function RecipeForm() {
       body: JSON.stringify(body),
     })
     setInputs({})
-    alert("recipe sent!")
-  }
-
-  const handleIngredientsChange = async (inputValue) => {
-    setInputs((values) => ({
-      ...values,
-      ingredients: inputValue,
-    }))
-  }
-
-  const handleCurrentIngredientChange = (inputValue) => {
-    setInputs((values) => ({
-      ...values,
-      currentIngredient: inputValue,
-    }))
-  }
-
-  const handleKeyDownIngredient = (event) => {
-    if (!inputs.currentIngredient) {
-      return
-    }
-    switch (event.key) {
-      case "Enter":
-      case "Tab":
-        setInputs((values) => ({
-          ...values,
-          currentIngredient: "",
-          ingredients: [
-            ...(values.ingredients ?? []),
-            {
-              label: values.currentIngredient,
-              value: values.currentIngredient,
-            },
-          ],
-        }))
-        event.preventDefault()
-        break
-      default:
-    }
-  }
-
-  const handleKeyDownTags = (event) => {
-    if (!inputs.currentTag) {
-      return
-    }
-    switch (event.key) {
-      case "Enter":
-      case "Tab":
-        setInputs((values) => ({
-          ...values,
-          currentTag: "",
-          tags: [
-            ...(values.tags ?? []),
-            {
-              label: values.currentTag,
-              value: values.currentTag,
-            },
-          ],
-        }))
-        event.preventDefault()
-        break
-      default:
-    }
+    alert("Recipe stored succesfully!")
   }
 
   return (
@@ -165,45 +111,19 @@ export function RecipeForm() {
         </label>
         <label>
           Ingredients:
-          <CreatableSelect
-            components={{
-              DropdownIndicator: null,
+          <ListInput
+            onChange={(ingredients) => {
+              setInputs((oldState) => ({ ...oldState, ingredients }))
             }}
-            inputValue={inputs.currentIngredient}
-            isClearable
-            isMulti
-            menuIsOpen={false}
-            onChange={handleIngredientsChange}
-            onInputChange={handleCurrentIngredientChange}
-            onKeyDown={handleKeyDownIngredient}
-            placeholder="Type something and press enter..."
             value={inputs.ingredients}
           />
         </label>
         <label>
           Tags:
-          <CreatableSelect
-            components={{
-              DropdownIndicator: null,
-            }}
-            inputValue={inputs.currentTag}
-            isClearable
-            isMulti
-            menuIsOpen={false}
-            onChange={(input) =>
-              setInputs((values) => ({
-                ...values,
-                tags: input,
-              }))
+          <ListInput
+            onChange={(tags) =>
+              setInputs((oldState) => ({ ...oldState, tags }))
             }
-            onInputChange={(input) =>
-              setInputs((values) => ({
-                ...values,
-                currentTag: input,
-              }))
-            }
-            onKeyDown={handleKeyDownTags}
-            placeholder="Type something and press enter..."
             value={inputs.tags}
           />
         </label>
