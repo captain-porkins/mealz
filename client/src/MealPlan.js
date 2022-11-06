@@ -1,6 +1,8 @@
+import * as _ from "lodash"
 import React, { Component } from "react"
-import Collapsible from "react-collapsible"
+import { stringifyIngredient } from "./ingredientUtils"
 import { ListInput } from "./ListInput"
+import Collapsible from "react-collapsible"
 export class MealPlan extends Component {
   constructor(props) {
     super(props)
@@ -17,9 +19,11 @@ export class MealPlan extends Component {
 
   render() {
     let mealz = null
+    let ingredients = null
 
     if (this.state.mealPlan) {
-      mealz = this.formatMealz(mealz)
+      mealz = this.formatMealz()
+      ingredients = this.formatIngredients()
     }
     return (
       <div
@@ -82,6 +86,7 @@ export class MealPlan extends Component {
             Generate Mealz
           </button>
           {mealz}
+          {ingredients}
         </div>
       </div>
     )
@@ -107,14 +112,59 @@ export class MealPlan extends Component {
   formatMealz() {
     const formattedMealz = this.state.mealPlan.mealz.map((meal) => {
       return (
-        <Collapsible trigger={meal.recipe._id} key={meal.recipe._id}>
-          <p>Days: {meal.days}</p>
-        </Collapsible>
+        <p key={meal.recipe._id}>
+          {meal.recipe._id} for {meal.days} days
+        </p>
       )
     })
     return (
       <div key="mealz" className="mealz">
         {formattedMealz}
+      </div>
+    )
+  }
+
+  formatIngredients() {
+    const allIngredients = this.state.mealPlan.mealz.flatMap((m) => {
+      return m.recipe.ingredients ?? []
+    })
+    const grouped = _.groupBy(
+      allIngredients,
+      (i) => `${i.name}-${i.quantity?.unit ?? "none"}`
+    )
+    const ingredientStrings = Object.entries(grouped).flatMap(
+      ([groupId, ingredients]) => {
+        if (groupId.endsWith("none")) {
+          return ingredients.map(stringifyIngredient)
+        }
+        return stringifyIngredient({
+          name: ingredients[0].name,
+          quantity: {
+            unit: ingredients[0].quantity.unit,
+            value: _.sumBy(ingredients, (i) => i.quantity.value),
+          },
+        })
+      }
+    )
+    console.log(ingredientStrings)
+    return (
+      <div
+        style={{
+          gridArea: "igs",
+        }}
+      >
+        <Collapsible trigger={"Shopping List"}>
+          {ingredientStrings.map((ingredient) => {
+            return (
+              <p
+                key={ingredient}
+                style={{ justifyContent: "left", textAlign: "left" }}
+              >
+                {ingredient}
+              </p>
+            )
+          })}
+        </Collapsible>
       </div>
     )
   }
