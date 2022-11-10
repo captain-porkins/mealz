@@ -29,7 +29,6 @@ export function RecipeForm() {
 
   const handleSubmit = async (event) => {
     event.preventDefault()
-    console.log(inputs.tags)
     const body = {
       ..._.pick(inputs, "servings", "tags", "method"),
       ingredients: inputs.ingredients.map((i) => splitIngredient(i)),

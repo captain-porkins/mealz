@@ -13,7 +13,20 @@ export function LoginForm() {
     }))
   }
 
-  const handleSubmit = () => {}
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+    const body = inputs
+
+    await fetch(`/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    })
+    setInputs({})
+    window.location.href = "/"
+  }
 
   return (
     <div

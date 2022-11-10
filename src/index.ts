@@ -1,19 +1,48 @@
 import bodyParser from "body-parser"
+import sessions from "client-sessions"
 import express from "express"
-import { client } from "./mongo.js"
-import _ from "lodash"
-import { isValidRecipe, reasonForInvalidity, Recipe } from "./recipe.js"
 import { promises as fs } from "fs"
+import _ from "lodash"
 import * as path from "path"
-import { fileURLToPath } from "url"
 import { dirname } from "path"
+import { fileURLToPath } from "url"
+import { client } from "./mongo.js"
+import { isValidRecipe, reasonForInvalidity, Recipe } from "./recipe.js"
+import * as bcrypt from "bcrypt"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
+const permittedUsernameRegex = /^[a-z0-9_-]*$/i
+
+const mustBeLoggedIn = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  // @ts-ignore
+  if (!req.session.user) {
+    res.redirect("/login")
+  } else {
+    next()
+  }
+}
+
 async function run() {
+  const clientApp = await fs.readFile(path.join(__dirname, "client/index.html"))
   const app = express()
   app.use(bodyParser.json())
   app.use(bodyParser.urlencoded({ extended: false }))
+  app.use(
+    sessions({
+      cookieName: "session",
+      secret: "placeholder", // todo
+      duration: 24 * 60 * 60 * 1000,
+      activeDuration: 1000 * 60 * 5,
+      cookie: {
+        httpOnly: true,
+      },
+    })
+  )
 
   const mongo = await client()
 
@@ -153,10 +182,89 @@ async function run() {
     }
   )
 
-  app.get("/", async (req: express.Request, res: express.Response) => {
-    const content = await fs.readFile(path.join(__dirname, "client/index.html"))
+  app.get(
+    "/",
+    mustBeLoggedIn,
+    async (req: express.Request, res: express.Response) => {
+      // todo redirect to login if not logged in
+      res.set("Content-Type", "text/html")
+      res.send(clientApp)
+    }
+  )
+
+  app.get("/login", async (req: express.Request, res: express.Response) => {
     res.set("Content-Type", "text/html")
-    res.send(content)
+    res.send(clientApp)
+  })
+
+  app.post("/login", async (req: express.Request, res: express.Response) => {
+    const username = req.body.username
+    const password = req.body.password
+
+    if (!username || !password) {
+      res.status(400).send("Must specify username and password in body")
+      return
+    }
+
+    if (!username.match(permittedUsernameRegex)) {
+      res
+        .status(400)
+        .send(`username does not match regex: ${permittedUsernameRegex}`)
+      return
+    }
+
+    const user = await mongo.get("recipes", "users", username)
+    if (!user) {
+      res.sendStatus(404)
+      return
+    }
+
+    const hashedPassword = await bcrypt.hash(password, user.salt as string)
+    if (hashedPassword === user.password) {
+      // @ts-ignore
+      req.session.user = username
+      res.redirect("/")
+      return
+    }
+
+    res.sendStatus(403)
+  })
+
+  app.get("/register", async (req: express.Request, res: express.Response) => {
+    res.set("Content-Type", "text/html")
+    res.send(clientApp)
+  })
+
+  app.post("/register", async (req: express.Request, res: express.Response) => {
+    const username = req.body.username
+    const password = req.body.password
+    if (!username || !password) {
+      res.status(400).send("Must specify username and password in body")
+      return
+    }
+
+    const allUsers = await mongo.select("recipes", "users")
+    const unavailableNames = ["users", ...allUsers.map((u) => u._id)]
+    if (unavailableNames.includes(username)) {
+      res.status(400).send(`username not available`)
+      return
+    }
+
+    if (!username.match(permittedUsernameRegex)) {
+      res
+        .status(400)
+        .send(`username does not match regex: ${permittedUsernameRegex}`)
+      return
+    }
+
+    const salt = await bcrypt.genSalt()
+    const hashedPassword = await bcrypt.hash(password, salt)
+    mongo.set("recipes", "users", {
+      _id: username,
+      password: hashedPassword,
+      salt,
+    })
+    res.sendStatus(201)
   })
 
   app.use(express.static(path.join(__dirname, "client")))
