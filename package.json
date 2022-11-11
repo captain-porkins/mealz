@@ -7,7 +7,7 @@
   "scripts": {
     "start-only": "node build/index.js",
     "start": "npm run build && node build/index.js",
-    "build": "rm -rf ./build && npx tsc && cp cert.pem build/cert.pem && cd client && npm run build && cp -r build ../build/client",
+    "build": "rm -rf ./build && npx tsc && (cp cert.pem build/cert.pem || true) && cd client && npm run build && cp -r build ../build/client",
     "test": "echo OK"
   },
   "repository": {

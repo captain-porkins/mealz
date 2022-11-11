@@ -8,13 +8,21 @@ import {
 import * as path from "path"
 import { dirname } from "path"
 import { fileURLToPath } from "url"
-
+import * as fs from "fs"
 export type MongoDocument = { _id: string } & Record<string, unknown>
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const credentials = path.join(__dirname, "cert.pem")
 
 export async function client(): Promise<MongoClient> {
+  if (!fs.existsSync(credentials)) {
+    if (process.env.MONGO_CERT) {
+      fs.writeFileSync(
+        credentials,
+        Buffer.from(process.env.MONGO_CERT, "base64")
+      )
+    }
+  }
   const officialClient = new OfficialMongoClient(
     "mongodb+srv://cluster0.y0alfer.mongodb.net/?authSource=%24external&authMechanism=MONGODB-X509&retryWrites=true&w=majority",
     {
