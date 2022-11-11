@@ -14,7 +14,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const permittedUsernameRegex = /^[a-z0-9_-]*$/i
 
-const mustBeLoggedIn = async (
+const mustBeLoggedInUi = async (
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
@@ -52,103 +52,112 @@ async function run() {
     process.exit()
   })
 
+  app.get("/mealplan", async (req: express.Request, res: express.Response) => {
+    // @ts-ignore
+    const user: string = req.session.user
+
+    if (!user) {
+      res.sendStatus(401)
+      return
+    }
+
+    const days =
+      parseInt(
+        typeof req.query.days === "string" ? req.query.days : "null",
+        10
+      ) || null
+
+    const mouths =
+      parseInt(
+        typeof req.query.mouths === "string" ? req.query.mouths : "null",
+        10
+      ) || null
+
+    const leftOversPermitted =
+      typeof req.query.leftOversPermitted === "string" &&
+      req.query.leftOversPermitted.toLowerCase() == "true"
+
+    const tags = _.isString(req.query.tags)
+      ? [req.query.tags]
+      : _.isArray(req.query.tags) && _.isString(req.query[0])
+      ? (req.query.tags as string[])
+      : []
+
+    if (!user) {
+      console.error(
+        "No user specified in mealplan request - indicates an issue with routing"
+      )
+      res.status(500)
+      return
+    }
+
+    if (!days || typeof days !== "number") {
+      res.status(400).send('Must specify "days" as a number in request params')
+      return
+    }
+
+    if (!mouths || typeof mouths !== "number") {
+      res
+        .status(400)
+        .send('Must specify "mouths" as a number in request params')
+      return
+    }
+    const query = tags.length ? { tags: { $all: tags } } : {}
+    const recipes: Recipe[] = _.shuffle(
+      (await mongo.select("recipes", user, query)) as Recipe[]
+    )
+
+    const servingsRequired = mouths * days
+
+    let mealz: { recipe: Recipe; days: number; leftOvers: number }[] = []
+    let haveRequiredServings = false
+    for (const recipe of recipes) {
+      if (recipe.servings >= mouths) {
+        const leftOvers = recipe.servings % mouths
+
+        if (leftOvers === 0 || leftOversPermitted) {
+          mealz.push({
+            recipe,
+            days: Math.floor(recipe.servings / mouths),
+            leftOvers,
+          })
+        }
+      }
+
+      haveRequiredServings =
+        _.sumBy(mealz, (m) => m.recipe.servings) >= servingsRequired
+      if (haveRequiredServings) {
+        break
+      }
+    }
+
+    if (!haveRequiredServings) {
+      res
+        .status(409)
+        .send(
+          "Unable to generate meal plan for that many days for that many mouths :( -> try adding more recipes that can serve that many mouths, or a smaller meal plan"
+        )
+      return
+    }
+    res.json({
+      totalDays: _.sumBy(mealz, (m) => m.days),
+      totalServings: _.sumBy(mealz, (m) => m.recipe.servings),
+      totalLeftOvers: _.sumBy(mealz, (m) => m.leftOvers),
+      mealz,
+    })
+  })
+
   app.get(
-    "/:user/mealplan",
+    "/recipe/:recipe",
     async (req: express.Request, res: express.Response) => {
-      const user = req.params.user
-      const days =
-        parseInt(
-          typeof req.query.days === "string" ? req.query.days : "null",
-          10
-        ) || null
-
-      const mouths =
-        parseInt(
-          typeof req.query.mouths === "string" ? req.query.mouths : "null",
-          10
-        ) || null
-
-      const leftOversPermitted =
-        typeof req.query.leftOversPermitted === "string" &&
-        req.query.leftOversPermitted.toLowerCase() == "true"
-
-      const tags = _.isString(req.query.tags)
-        ? [req.query.tags]
-        : _.isArray(req.query.tags) && _.isString(req.query[0])
-        ? (req.query.tags as string[])
-        : []
+      // @ts-ignore
+      const user: string = req.session.user
 
       if (!user) {
-        console.error(
-          "No user specified in mealplan request - indicates an issue with routing"
-        )
-        res.status(500)
+        res.sendStatus(401)
         return
       }
 
-      if (!days || typeof days !== "number") {
-        res
-          .status(400)
-          .send('Must specify "days" as a number in request params')
-        return
-      }
-
-      if (!mouths || typeof mouths !== "number") {
-        res
-          .status(400)
-          .send('Must specify "mouths" as a number in request params')
-        return
-      }
-      const query = tags.length ? { tags: { $all: tags } } : {}
-      const recipes: Recipe[] = _.shuffle(
-        (await mongo.select("recipes", user, query)) as Recipe[]
-      )
-
-      const servingsRequired = mouths * days
-
-      let mealz: { recipe: Recipe; days: number; leftOvers: number }[] = []
-      let haveRequiredServings = false
-      for (const recipe of recipes) {
-        if (recipe.servings >= mouths) {
-          const leftOvers = recipe.servings % mouths
-
-          if (leftOvers === 0 || leftOversPermitted) {
-            mealz.push({
-              recipe,
-              days: Math.floor(recipe.servings / mouths),
-              leftOvers,
-            })
-          }
-        }
-
-        haveRequiredServings =
-          _.sumBy(mealz, (m) => m.recipe.servings) >= servingsRequired
-        if (haveRequiredServings) {
-          break
-        }
-      }
-
-      if (!haveRequiredServings) {
-        res
-          .status(409)
-          .send(
-            "Unable to generate meal plan for that many days for that many mouths :( -> try adding more recipes that can serve that many mouths, or a smaller meal plan"
-          )
-        return
-      }
-      res.json({
-        totalDays: _.sumBy(mealz, (m) => m.days),
-        totalServings: _.sumBy(mealz, (m) => m.recipe.servings),
-        totalLeftOvers: _.sumBy(mealz, (m) => m.leftOvers),
-        mealz,
-      })
-    }
-  )
-
-  app.get(
-    "/:user/recipe/:recipe",
-    async (req: express.Request, res: express.Response) => {
-      const user = req.params.user
       const recipeName = req.params.recipe
       const recipe = await mongo.get("recipes", user, recipeName)
       if (!recipe) {
@@ -160,11 +169,17 @@ async function run() {
   )
 
   app.post(
-    "/:user/recipe/:recipe",
+    "/recipe/:recipe",
     async (req: express.Request, res: express.Response) => {
-      console.log("start")
+      // @ts-ignore
+      const user: string = req.session.user
+
+      if (!user) {
+        res.sendStatus(401)
+        return
+      }
+
       try {
-        const user = req.params.user
         const recipeName = req.params.recipe
         const recipe = {
           _id: recipeName,
@@ -176,7 +191,8 @@ async function run() {
         }
         await mongo.set("recipes", user, recipe)
         res.sendStatus(200)
-      } catch {
+      } catch (e) {
+        console.error(e)
         res.sendStatus(500)
       }
     }
@@ -184,7 +200,7 @@ async function run() {
 
   app.get(
     "/",
-    mustBeLoggedIn,
+    mustBeLoggedInUi,
     async (req: express.Request, res: express.Response) => {
       // todo redirect to login if not logged in
       res.set("Content-Type", "text/html")

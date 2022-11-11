@@ -34,7 +34,7 @@ export function RecipeForm() {
       ingredients: inputs.ingredients.map((i) => splitIngredient(i)),
     }
 
-    await fetch(`zach/recipe/${inputs.recipe_name}`, {
+    await fetch(`/recipe/${inputs.recipe_name}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

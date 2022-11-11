@@ -95,7 +95,7 @@ export class MealPlan extends Component {
   async handleClick() {
     const mealPlan = await (
       await fetch(
-        `zach/mealplan?${new URLSearchParams({
+        `/mealplan?${new URLSearchParams({
           mouths: this.state.plan.mouths,
           days: this.state.plan.days,
           meal: this.state.plan.meal,
