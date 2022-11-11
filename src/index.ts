@@ -285,8 +285,9 @@ async function run() {
 
   app.use(express.static(path.join(__dirname, "client")))
 
-  app.listen(80)
-  console.log("Listening on port 80...")
+  const port = process.env.PORT ?? 8080
+  app.listen(port)
+  console.log(`Listening on port ${port}...`)
 }
 
 run().catch(console.error)
