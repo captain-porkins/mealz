@@ -5,9 +5,9 @@
   "main": "lib/index.ts",
   "type": "module",
   "scripts": {
-    "start-only": "node build/index.js",
-    "start": "npm run build && node build/index.js",
-    "postinstall": "npm install --only=dev && rm -rf ./build && ls ./node_modules/.bin && tsc && (cp cert.pem build/cert.pem || true) && cd client && npm i && npm run build && cp -r build ../build/client",
+    "start": "node build/index.js",
+    "start-build": "npm run build && node build/index.js",
+    "build": "rm -rf ./build && ls ./node_modules/.bin && tsc && (cp cert.pem build/cert.pem || true) && cd client && npm i && npm run build && cp -r build ../build/client",
     "test": "echo OK"
   },
   "repository": {
