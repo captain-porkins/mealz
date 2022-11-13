@@ -1,6 +1,6 @@
 import React from "react"
 
-export function LoginForm() {
+export function RegisterForm() {
   const [inputs, setInputs] = React.useState({ meal: "lunch" })
 
   const handleChange = async (event) => {
@@ -17,7 +17,7 @@ export function LoginForm() {
     event.preventDefault()
     const body = inputs
 
-    await fetch(`/login`, {
+    await fetch(`/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -25,7 +25,7 @@ export function LoginForm() {
       body: JSON.stringify(body),
     })
     setInputs({})
-    window.location.href = "/"
+    window.location.href = "/login"
   }
 
   return (
@@ -36,9 +36,6 @@ export function LoginForm() {
         height: "100%",
         justifyContent: "center",
         justifyItems: "center",
-        alignContent: "center",
-        alignItems: "center",
-        flexDirection: "column",
         margin: 0,
       }}
     >
@@ -61,26 +58,8 @@ export function LoginForm() {
             onChange={handleChange}
           />
         </label>
-        <input type="submit" value={"Login"} />
+        <input type="submit" value={"Register"} />
       </form>
-      <div>
-        <p
-          style={{
-            textAlign: "center",
-          }}
-        >
-          OR
-        </p>
-        <button
-          className="mealzButton"
-          key="button"
-          onClick={() => {
-            window.location.href = "/register"
-          }}
-        >
-          Register
-        </button>
-      </div>
     </div>
   )
 }

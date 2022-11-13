@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom"
 import App from "./App"
 import "./index.css"
 import { LoginForm } from "./Login"
+import { RegisterForm } from "./Register"
 import reportWebVitals from "./reportWebVitals"
 
 const router = createBrowserRouter([
@@ -14,6 +15,10 @@ const router = createBrowserRouter([
   {
     path: "/login",
     element: <LoginForm />,
+  },
+  {
+    path: "/register",
+    element: <RegisterForm />,
   },
 ])
 
