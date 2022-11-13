@@ -13,7 +13,7 @@ export function RecipeForm() {
     if (name === "recipe_name" && value !== inputs.recipe_name) {
       // recipe name has changed
       try {
-        recipe = await (await fetch(`zach/recipe/${value}`)).json()
+        recipe = await (await fetch(`/recipe/${value}`)).json()
         recipe.ingredients = recipe.ingredients.map(stringifyIngredient)
       } catch {
         recipe = {}
