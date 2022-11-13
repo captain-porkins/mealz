@@ -193,10 +193,11 @@
   width: 95%;
   height: 95%;
   grid-template-areas:
-    "a b b"
-    "a b b"
-    "a b b"
-    "a c c";
+    "a b"
+    "a b"
+    "a b"
+    "a c";
+  grid-template-columns: minmax(0px, 500px) minmax(0px, 1fr);
   gap: 10px;
 }
 
